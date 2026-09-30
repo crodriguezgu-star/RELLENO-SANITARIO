@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exámenes interactivos - Rellenos Sanitarios</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+        body {
+            background: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .main-container {
+            max-width: 1100px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #1e3a5f;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .subtitle {
+            text-align: center;
+            color: #2c5282;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+
+        /* ====== PESTAÑAS / TABS ====== */
+        .tabs-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 25px;
+            background: white;
+            padding: 12px;
+            border-radius: 60px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .tab-btn {
+            background: #e2eaf3;
+            border: none;
+            color: #1e3a5f;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .tab-btn:hover {
+            background: #cbdae9;
+        }
+        .tab-btn.active {
+            background: #2b6f9b;
+            color: white;
+            box-shadow: 0 4px 10px rgba(43,111,155,0.3);
+        }
+        .tab-btn .num {
+            background: rgba(255,255,255,0.3);
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+        .tab-btn.active .num {
+            background: rgba(255,255,255,0.35);
+        }
+
+        /* ====== EXAMEN ====== */
+        .exam-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+            padding: 25px 30px;
+            border: 1px solid #d9e2ef;
+        }
+        .exam-card.hidden {
+            display: none;
+        }
+        .exam-header {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0b3b5c;
+            border-bottom: 4px solid #3a7ca5;
+            padding-bottom: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .exam-header span {
+            background: #3a7ca5;
+            color: white;
+            font-size: 1.1rem;
+            padding: 5px 14px;
+            border-radius: 40px;
+        }
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1e4a6b;
+            margin: 30px 0 15px 0;
+            border-left: 8px solid #3a7ca5;
+            padding-left: 15px;
+        }
+        .question-item {
+            background: #f9fcff;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 18px;
+            border: 1px solid #e2edf7;
+            transition: background 0.2s;
+        }
+        .question-item.correct {
+            background: #e6f7e6;
+            border-color: #7ac47a;
+        }
+        .question-item.incorrect {
+            background: #ffeaea;
+            border-color: #e07a7a;
+        }
+        .question-text {
+            font-weight: 500;
+            font-size: 1.02rem;
+            margin-bottom: 12px;
+            color: #0e2c44;
+        }
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 22px;
+            margin-bottom: 10px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #2b6f9b;
+            cursor: pointer;
+        }
+        .fill-input {
+            padding: 10px 14px;
+            font-size: 0.98rem;
+            border: 2px solid #cbdae9;
+            border-radius: 40px;
+            width: 260px;
+            max-width: 100%;
+            transition: border 0.2s;
+            outline: none;
+        }
+        .fill-input:focus {
+            border-color: #2b6f9b;
+            box-shadow: 0 0 0 3px rgba(43,111,155,0.15);
+        }
+        .fill-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-top: 5px;
+        }
+        .feedback {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .feedback .check {
+            color: #2e7d32;
+        }
+        .feedback .cross {
+            color: #c62828;
+        }
+        .correct-answer-msg {
+            margin-top: 8px;
+            font-size: 0.92rem;
+            background: #fff3cd;
+            padding: 8px 14px;
+            border-radius: 40px;
+            border-left: 6px solid #ffb74d;
+            color: #7a5a00;
+            display: inline-block;
+        }
+        .btn-verify {
+            background: #2b6f9b;
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 8px 22px;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .btn-verify:hover {
+            background: #1d5479;
+        }
+        .btn-verify.small {
+            padding: 7px 18px;
+            font-size: 0.88rem;
+        }
+        .footer-note {
+            text-align: center;
+            color: #5b7f9b;
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+        .reset-btn {
+            background: #e2eaf3;
+            border: none;
+            color: #1e3a5f;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+            margin-top: 15px;
+        }
+        .reset-btn:hover {
+            background: #cbdae9;
+        }
+        .hidden {
+            display: none;
+        }
+        .exam-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2edf7;
+        }
+        .nav-exam-btns {
+            display: flex;
+            gap: 10px;
+        }
+        .nav-exam-btn {
+            background: #3a7ca5;
+            border: none;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .nav-exam-btn:hover {
+            background: #1d5479;
+        }
+        .nav-exam-btn:disabled {
+            background: #cbdae9;
+            color: #8ba3b8;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <h1>📋 Exámenes interactivos</h1>
+    <div class="subtitle">Rellenos Sanitarios y Gestión de Residuos Sólidos</div>
+
+    <!-- PESTAÑAS -->
+    <div class="tabs-container" id="tabsContainer">
+        <button class="tab-btn active" data-exam="1"><span class="num">1</span> Generación Acumulada</button>
+        <button class="tab-btn" data-exam="2"><span class="num">2</span> Infraestructura</button>
+        <button class="tab-btn" data-exam="3"><span class="num">3</span> Bioseguridad</button>
+        <button class="tab-btn" data-exam="4"><span class="num">4</span> Diseño y Cálculo</button>
+        <button class="tab-btn" data-exam="5"><span class="num">5</span> Selección de Sitio</button>
+    </div>
+
+    <!-- EXAMEN 1 -->
+    <div class="exam-card" id="exam1">
+        <div class="exam-header"><span>1</span> Cálculo de Generación Acumulada de Residuos Sólidos</div>
+        <div class="section-title">Parte I: Opción múltiple</div>
+        <div id="exam1-multiple"></div>
+        <div class="section-title">Parte II: Completar espacios</div>
+        <div id="exam1-fill"></div>
+        <div class="exam-footer">
+            <button class="reset-btn" onclick="resetExam(1)">🔄 Reiniciar examen 1</button>
+            <div class="nav-exam-btns">
+                <button class="nav-exam-btn" disabled>◀ Anterior</button>
+                <button class="nav-exam-btn" onclick="switchExam(2)">Siguiente ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXAMEN 2 -->
+    <div class="exam-card hidden" id="exam2">
+        <div class="exam-header"><span>2</span> Diseño de Infraestructura de Relleno Sanitario</div>
+        <div class="section-title">Parte I: Opción múltiple</div>
+        <div id="exam2-multiple"></div>
+        <div class="section-title">Parte II: Completar espacios</div>
+        <div id="exam2-fill"></div>
+        <div class="exam-footer">
+            <button class="reset-btn" onclick="resetExam(2)">🔄 Reiniciar examen 2</button>
+            <div class="nav-exam-btns">
+                <button class="nav-exam-btn" onclick="switchExam(1)">◀ Anterior</button>
+                <button class="nav-exam-btn" onclick="switchExam(3)">Siguiente ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXAMEN 3 -->
+    <div class="exam-card hidden" id="exam3">
+        <div class="exam-header"><span>3</span> Diseño de Relleno Sanitario y Bioseguridad</div>
+        <div class="section-title">Parte I: Opción múltiple</div>
+        <div id="exam3-multiple"></div>
+        <div class="section-title">Parte II: Completar espacios</div>
+        <div id="exam3-fill"></div>
+        <div class="exam-footer">
+            <button class="reset-btn" onclick="resetExam(3)">🔄 Reiniciar examen 3</button>
+            <div class="nav-exam-btns">
+                <button class="nav-exam-btn" onclick="switchExam(2)">◀ Anterior</button>
+                <button class="nav-exam-btn" onclick="switchExam(4)">Siguiente ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXAMEN 4 -->
+    <div class="exam-card hidden" id="exam4">
+        <div class="exam-header"><span>4</span> Diseño y Cálculo de Relleno Sanitario</div>
+        <div class="section-title">Parte I: Opción múltiple</div>
+        <div id="exam4-multiple"></div>
+        <div class="section-title">Parte II: Completar espacios</div>
+        <div id="exam4-fill"></div>
+        <div class="exam-footer">
+            <button class="reset-btn" onclick="resetExam(4)">🔄 Reiniciar examen 4</button>
+            <div class="nav-exam-btns">
+                <button class="nav-exam-btn" onclick="switchExam(3)">◀ Anterior</button>
+                <button class="nav-exam-btn" onclick="switchExam(5)">Siguiente ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXAMEN 5 -->
+    <div class="exam-card hidden" id="exam5">
+        <div class="exam-header"><span>5</span> Estudio de Selección de Sitio</div>
+        <div class="section-title">Parte I: Opción múltiple</div>
+        <div id="exam5-multiple"></div>
+        <div class="section-title">Parte II: Completar espacios</div>
+        <div id="exam5-fill"></div>
+        <div class="exam-footer">
+            <button class="reset-btn" onclick="resetExam(5)">🔄 Reiniciar examen 5</button>
+            <div class="nav-exam-btns">
+                <button class="nav-exam-btn" onclick="switchExam(4)">◀ Anterior</button>
+                <button class="nav-exam-btn" disabled>Siguiente ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-note">✅ Haz clic en "Verificar" para comprobar tus respuestas. Las respuestas correctas se muestran si hay error.</div>
+</div>
+
+<script>
+    // ======================== DATOS DE LOS EXÁMENES ========================
+    const examsData = {
+        1: {
+            multiple: [
+                { id: '1-1', question: 'En la matriz de proyecciones, ¿qué variables son indispensables para proyectar la población futura de un distrito?', options: ['A) Área del distrito y densidad poblacional', 'B) Población inicial y tasa de crecimiento anual', 'C) Tasa de natalidad y tasa de mortalidad', 'D) Generación per cápita inicial'], correct: 'B' },
+                { id: '1-2', question: '¿Cómo se expresa matemáticamente la Generación Per Cápita (GPC) en los estudios ambientales?', options: ['A) Toneladas por mes', 'B) m3 / habitante / año', 'C) kg / habitante / día', 'D) kg / kilómetro cuadrado'], correct: 'C' },
+                { id: '1-3', question: 'Para calcular la cantidad de residuos domiciliarios diarios generados en un distrito, se debe multiplicar la población total por:', options: ['A) El área del distrito', 'B) La densidad de compactación', 'C) La Generación Per Cápita (GPC)', 'D) El factor de material de cobertura'], correct: 'C' },
+                { id: '1-4', question: 'La Generación Municipal Total se calcula sumando los residuos domiciliarios, de barrido, de áreas públicas y:', options: ['A) Residuos peligrosos hospitalarios', 'B) Residuos industriales tóxicos', 'C) Residuos radiactivos', 'D) Residuos no domiciliarios asimilables (comerciales, institucionales)'], correct: 'D' },
+                { id: '1-5', question: 'Si se tiene la generación total en toneladas por día (t/día), ¿qué operación matemática da como resultado la generación anual?', options: ['A) Multiplicar por 12', 'B) Dividir entre 30', 'C) Multiplicar por 365', 'D) Dividir entre 1000'], correct: 'C' },
+                { id: '1-6', question: 'Según las consideraciones técnicas, ¿cuál es la densidad de compactación promedio empleada para dimensionar un relleno sanitario manual?', options: ['A) 0.10 - 0.20 t/m3', 'B) 0.50 - 0.60 t/m3', 'C) 0.80 - 1.00 t/m3', 'D) 1.20 - 1.50 t/m3'], correct: 'B' },
+                { id: '1-7', question: '¿Cuál es la fórmula utilizada en las hojas de cálculo para determinar el volumen (m³) que ocuparán los residuos sólidos?', options: ['A) Densidad / Masa', 'B) Masa total * Densidad de compactación', 'C) Masa total / Densidad de compactación', 'D) Masa total + Densidad de compactación'], correct: 'C' },
+                { id: '1-8', question: '¿Qué porcentaje del volumen de los residuos se estima habitualmente para el uso de material de cobertura?', options: ['A) Entre 5% y 10%', 'B) Entre 10% y 15%', 'C) Entre 20% y 25%', 'D) Más del 50%'], correct: 'C' },
+                { id: '1-9', question: 'El volumen total de la "celda diaria" se obtiene sumando:', options: ['A) Volumen de lixiviados + Volumen de biogás', 'B) Volumen de residuos + Volumen de material de cobertura', 'C) Producción domiciliaria + Producción industrial', 'D) Volumen acumulado + Volumen de reserva'], correct: 'B' },
+                { id: '1-10', question: 'En una matriz de proyección de diseño, ¿qué representa la columna "Volumen Acumulado"?', options: ['A) El volumen generado en el último mes de operación.', 'B) La diferencia entre el volumen ingresado y el volumen reciclado.', 'C) La suma progresiva del volumen dispuesto año tras año desde el inicio de operaciones.', 'D) El espacio vacío que queda disponible en el relleno sanitario.'], correct: 'C' },
+                { id: '1-11', question: '¿Para qué es fundamental conocer el Volumen Acumulado Total al final de la vida proyectada del proyecto?', options: ['A) Para determinar la vida útil y calcular el área total requerida para el relleno.', 'B) Para calcular el presupuesto de recolección de basura.', 'C) Para diseñar la ruta de los camiones recolectores.', 'D) Para definir el color de los contenedores urbanos.'], correct: 'A' },
+                { id: '1-12', question: 'Si la tasa de crecimiento poblacional es 0%, ¿cómo será la generación de residuos anual a lo largo del tiempo, asumiendo una GPC constante?', options: ['A) Crecerá exponencialmente', 'B) Disminuirá linealmente', 'C) Se mantendrá constante', 'D) Caerá a cero'], correct: 'C' },
+                { id: '1-13', question: 'Para convertir la masa de residuos recolectados de kilogramos a toneladas en Excel, se debe:', options: ['A) Multiplicar por 1000', 'B) Dividir entre 1000', 'C) Dividir entre 365', 'D) Multiplicar por 2.2'], correct: 'B' },
+                { id: '1-14', question: 'Si un operador logra una densidad de compactación mucho mayor a la calculada inicialmente, ¿qué sucede con la vida útil del relleno sanitario?', options: ['A) La vida útil se reduce rápidamente.', 'B) La vida útil no se ve afectada.', 'C) La vida útil se incrementa, ya que los residuos ocupan menos espacio.', 'D) Las celdas colapsan por exceso de peso.'], correct: 'C' },
+                { id: '1-15', question: 'Para hallar el Área Total del relleno (en m2), se debe multiplicar el área requerida para disponer residuos por un factor de aumento (ej. 1.30 o 1.40). ¿Qué justifica este aumento?', options: ['A) Los errores matemáticos de la hoja de cálculo.', 'B) El espacio para áreas administrativas, patio de maniobras, vías e instalaciones.', 'C) La evasión de impuestos prediales.', 'D) La evaporación de los lixiviados.'], correct: 'B' },
+                { id: '1-16', question: 'Los residuos producto del barrido de calles deben incluirse en la suma de generación municipal anual porque:', options: ['A) Son peligrosos y requieren incineración.', 'B) Su gestión es responsabilidad municipal y ocuparán volumen en el mismo relleno.', 'C) Contienen altos niveles de metales pesados.', 'D) Las barredoras mecánicas son muy costosas.'], correct: 'B' },
+                { id: '1-17', question: 'Si en el Año 1 el volumen de residuos compactados es 1,000 m3 y el material de cobertura es el 20%, ¿cuál es el volumen anual total de la celda?', options: ['A) 1,020 m3', 'B) 1,200 m3', 'C) 1,500 m3', 'D) 2,000 m3'], correct: 'B' },
+                { id: '1-18', question: 'En la realidad operativa, el dato inicial exacto de masa de residuos que ingresa al relleno sanitario para contrastar con las proyecciones se obtiene mediante:', options: ['A) Encuestas vecinales', 'B) Imágenes de drones', 'C) Una balanza de pesaje para camiones en el pórtico de ingreso', 'D) Medición con cinta métrica en la celda'], correct: 'C' },
+                { id: '1-19', question: '¿Por qué es fundamental que la matriz de Excel proyecte la generación año a año en lugar de usar un valor estático?', options: ['A) Porque la densidad del aire cambia cada año.', 'B) Porque la topografía del terreno se expande anualmente.', 'C) Porque la población crece y, en consecuencia, la cantidad de basura aumenta con el tiempo.', 'D) Para hacer el documento más largo y complejo.'], correct: 'C' },
+                { id: '1-20', question: '¿Qué unidad de medida física se utiliza para expresar el "Volumen Acumulado" en la matriz de diseño de un relleno sanitario?', options: ['A) Toneladas (t)', 'B) Metros cuadrados (m2)', 'C) Metros cúbicos (m3)', 'D) Hectáreas (ha)'], correct: 'C' }
+            ],
+            fill: [
+                { id: '1-21', question: 'La cantidad de residuos que produce un solo habitante en un día se denomina Generación ________.', correct: ['per cápita', 'per capita', 'percapita'] },
+                { id: '1-22', question: 'Para calcular el volumen ocupado por los residuos, la fórmula matemática exige dividir la masa total entre la ________ de compactación.', correct: ['densidad'] },
+                { id: '1-23', question: 'La proyección de la cantidad de residuos se realiza para todo el período de diseño, el cual también es conocido como vida ________ del proyecto.', correct: ['útil', 'util'] },
+                { id: '1-24', question: 'Al volumen de los residuos compactados se le debe sumar el volumen de la tierra o material de ________ para obtener el volumen de la celda.', correct: ['cobertura'] },
+                { id: '1-25', question: 'La generación municipal anual se calcula sumando los residuos domiciliarios y los residuos de origen ________ (instituciones, comercios).', correct: ['no domiciliario', 'no domiciliarios'] },
+                { id: '1-26', question: 'En las fórmulas, para pasar el valor de toneladas diarias a toneladas anuales, se debe multiplicar el valor diario por ________ (días).', correct: ['365'] },
+                { id: '1-27', question: 'El volumen del año "n" se calcula sumando el volumen del año "n" más los volúmenes depositados de todos los años anteriores: volumen ________.', correct: ['acumulado'] },
+                { id: '1-28', question: 'La compactación utilizando maquinaria pesada (tractores de oruga) permite lograr una mayor ________ que si se hace manualmente.', correct: ['densidad'] },
+                { id: '1-29', question: 'El área a rellenar se calcula dividiendo el volumen acumulado final entre la ________ promedio o altura del relleno.', correct: ['profundidad', 'altura'] },
+                { id: '1-30', question: 'El aumento progresivo de habitantes de un distrito a lo largo del tiempo se proyecta utilizando una tasa de crecimiento ________.', correct: ['anual', 'poblacional'] },
+                { id: '1-31', question: 'En las conversiones matemáticas de la hoja de cálculo, un kilogramo equivale a la milésima parte de una ________.', correct: ['tonelada'] },
+                { id: '1-32', question: 'Si un municipio implementa políticas de reciclaje y compostaje, la cantidad de residuos sólidos que irá a disposición final será ________ a la proyectada inicialmente.', correct: ['menor'] },
+                { id: '1-33', question: 'Los residuos que provienen de la limpieza de vías públicas y calles peatonales se catalogan en la matriz como residuos de ________.', correct: ['barrido'] },
+                { id: '1-34', question: 'El Área Total del relleno no solo considera la zona de entierro de basura, sino también el patio de ________, oficinas e instalaciones auxiliares.', correct: ['maniobras'] },
+                { id: '1-35', question: 'El año inicial donde comienzan las operaciones y los cálculos de un proyecto se conoce comúnmente como año ________ (o año cero).', correct: ['base', 'cero'] },
+                { id: '1-36', question: 'Si el material de cobertura corresponde al 20% del volumen de la basura, y la basura ocupa 100 m3, entonces la cobertura ocupará ________ m3.', correct: ['20'] },
+                { id: '1-37', question: 'En el cuadro resumen, la masa de los residuos sólidos se expresa en toneladas, mientras que el espacio físico que ocupan se expresa en metros ________.', correct: ['cúbicos', 'cubicos'] },
+                { id: '1-38', question: 'Un operador de maquinaria debe realizar un control riguroso de la ________ de los residuos para no agotar el espacio del relleno de manera prematura.', correct: ['densidad', 'compactación', 'compactacion'] },
+                { id: '1-39', question: 'Una vez obtenida el Área Total del proyecto en metros cuadrados (m2), suele dividirse entre 10,000 para expresarla en ________.', correct: ['hectáreas', 'hectareas'] },
+                { id: '1-40', question: 'La conformación física de tierra y residuos que los camiones descargan y los operadores tapan al término de cada jornada de trabajo recibe el nombre de celda ________.', correct: ['diaria'] }
+            ]
+        },
+        2: {
+            multiple: [
+                { id: '2-1', question: '¿Cuál es la capacidad máxima de diseño para un Relleno Sanitario Manual?', options: ['A) Hasta 6 t/día', 'B) Entre 6 y 50 t/día', 'C) Más de 50 t/día', 'D) Hasta 100 t/día'], correct: 'A' },
+                { id: '2-2', question: '¿Qué densidad de compactación se alcanza típicamente en un Relleno Sanitario Semimecanizado?', options: ['A) 0.40 - 0.50 t/m3', 'B) 0.50 - 0.60 t/m3', 'C) 0.60 - 0.70 t/m3', 'D) 0.70 - 1.00 t/m3'], correct: 'C' },
+                { id: '2-3', question: 'Un relleno sanitario que recibe más de 50 t/día y requiere flota pesada permanente (tractores oruga, volquetes) se clasifica como:', options: ['A) Manual', 'B) Semimecanizado', 'C) Mecanizado', 'D) Botadero controlado'], correct: 'C' },
+                { id: '2-4', question: 'Según las diapositivas, ¿cuál de los siguientes es un residuo ACEPTABLE en un relleno sanitario convencional?', options: ['A) Residuos agrícolas', 'B) Polvos químicos inflamables', 'C) Residuos biocontaminados', 'D) Lodos de aguas residuales sin tratar'], correct: 'A' },
+                { id: '2-5', question: '¿Qué estudio básico permite determinar la profundidad del nivel freático y la dirección del flujo de agua subterránea?', options: ['A) Estudio de Mecánica de Suelos', 'B) Estudio Geológico', 'C) Estudio Geofísico', 'D) Estudio Geohidrológico'], correct: 'D' },
+                { id: '2-6', question: 'Para identificar fallas tectónicas locales, sismicidad y litología, se debe realizar un:', options: ['A) Estudio Demográfico', 'B) Estudio Geológico', 'C) Estudio Topográfico', 'D) Estudio de Mecánica de Suelos'], correct: 'B' },
+                { id: '2-7', question: '¿Qué método de construcción es ideal para terrenos planos con un nivel freático profundo?', options: ['A) Método de Área', 'B) Método de Trinchera (Zanja)', 'C) Método Combinado', 'D) Método de Terraplén'], correct: 'B' },
+                { id: '2-8', question: 'Si el terreno tiene una topografía irregular o el nivel freático es muy alto, el método de construcción recomendado es:', options: ['A) Método de Área', 'B) Método de Trinchera', 'C) Método Combinado', 'D) Método de Terraplén'], correct: 'A' },
+                { id: '2-9', question: 'El porcentaje de volumen que típicamente ocupa el material de cobertura respecto al total de residuos es:', options: ['A) 5% al 10%', 'B) 10% al 15%', 'C) 20% al 25%', 'D) 30% al 40%'], correct: 'C' },
+                { id: '2-10', question: 'En la fórmula de proyección demográfica (Pf = P0(1+r)^n), ¿qué representa la variable "r"?', options: ['A) Tasa de recolección', 'B) Tasa de crecimiento anual', 'C) Residuos recolectados por semana', 'D) Número de años proyectados'], correct: 'B' },
+                { id: '2-11', question: '¿Cuál es el estudio básico que evalúa la permeabilidad y la disponibilidad de material de cobertura natural?', options: ['A) Estudio Topográfico', 'B) Estudio Geofísico', 'C) Estudio de Mecánica de Suelos', 'D) Estudio de Caracterización de residuos'], correct: 'C' },
+                { id: '2-12', question: 'Para calcular el volumen de residuos sólidos (m³) a disponer anualmente, se debe:', options: ['A) Multiplicar la generación anual por el 25%', 'B) Dividir la generación anual de residuos entre la densidad de residuos compactados', 'C) Sumar el volumen de material de cobertura al nivel freático', 'D) Multiplicar la población total por la tasa de crecimiento'], correct: 'B' },
+                { id: '2-13', question: 'En el dimensionamiento de una trinchera, la letra "h" representa:', options: ['A) El largo de base mayor', 'B) El ancho de base menor', 'C) La humedad de los residuos', 'D) La altura o profundidad'], correct: 'D' },
+                { id: '2-14', question: 'Según el cuadro de cálculo de cantidad de residuos a disponer, los residuos municipales totales resultan de sumar los residuos domiciliarios, de almacenamiento, de barrido y:', options: ['A) Residuos hospitalarios', 'B) Residuos radiactivos', 'C) Residuos no domiciliarios asimilables', 'D) Residuos industriales tóxicos'], correct: 'C' },
+                { id: '2-15', question: 'En el método combinado de construcción de rellenos sanitarios, se maximiza el volumen útil mediante:', options: ['A) Uso exclusivo de plataformas en superficie', 'B) Zanjas en la base y plataformas en la superficie', 'C) Excavaciones hasta tocar el nivel freático', 'D) Barreras naturales perimetrales de 10 metros'], correct: 'B' },
+                { id: '2-16', question: 'Los líquidos y lodos sin tratar, así como los compuestos orgánicos líquidos, en un relleno sanitario convencional son:', options: ['A) Totalmente aceptables si se mezclan con tierra', 'B) Aceptables solo en el método de trinchera', 'C) Inaceptables por ser de alto riesgo', 'D) Aceptables en rellenos manuales'], correct: 'C' },
+                { id: '2-17', question: '¿Qué tipo de maquinaria se utiliza en la operación de un relleno sanitario manual?', options: ['A) Tractores oruga de forma constante', 'B) Compactadoras hidráulicas estacionarias', 'C) Maquinaria esporádica solo para acopio de tierra', 'D) Rodillos pata de cabra'], correct: 'C' },
+                { id: '2-18', question: 'El volumen diario a disponer en la celda se calcula sumando:', options: ['A) El volumen de residuos y el volumen de cobertura', 'B) El volumen de lixiviados y biogás', 'C) La generación per cápita y la densidad', 'D) El área y la altura'], correct: 'A' },
+                { id: '2-19', question: 'En el cálculo del área de la celda, ¿qué significa "Frente de descarga"?', options: ['A) La pared trasera de la trinchera', 'B) La superficie donde los vehículos descargan los residuos', 'C) El límite del cerco perimétrico', 'D) El área destinada exclusivamente para oficinas'], correct: 'B' },
+                { id: '2-20', question: 'Para calcular la generación anual (toneladas/año) a partir de la generación diaria, se debe multiplicar la generación diaria por:', options: ['A) 12 meses', 'B) 52 semanas', 'C) 365 días', 'D) 10 años (período de diseño)'], correct: 'C' }
+            ],
+            fill: [
+                { id: '2-21', question: 'El relleno sanitario ________ tiene una capacidad mayor a 6 toneladas pero hasta 50 t/día y usa equipo multiusos permanentemente.', correct: ['semimecanizado'] },
+                { id: '2-22', question: 'Las herramientas manuales como rastrillos y ________ se utilizan predominantemente en la operación de un relleno manual.', correct: ['pisones'] },
+                { id: '2-23', question: 'La densidad de compactación esperada en un relleno sanitario mecanizado varía entre 0.70 y ________ t/m3.', correct: ['1.00', '1.0', '1'] },
+                { id: '2-24', question: 'Los residuos de establecimientos de salud son considerados ________ por ser de alto riesgo patógeno y biocontaminado.', correct: ['inaceptables'] },
+                { id: '2-25', question: 'El estudio ________ es fundamental para conocer la pendiente, curvas de nivel y perfiles del terreno a utilizar.', correct: ['topográfico', 'topografico'] },
+                { id: '2-26', question: 'El estudio geofísico sirve para detectar la estructura interna, fallas o ________ ocultas en el terreno.', correct: ['cavidades'] },
+                { id: '2-27', question: 'En el método de ________ (zanja), la tierra que se remueve durante la excavación se usa posteriormente como material de cobertura.', correct: ['trinchera'] },
+                { id: '2-28', question: 'El método de área se emplea cuando el terreno tiene topografía irregular o cuando el nivel ________ es muy alto.', correct: ['freático', 'freatico'] },
+                { id: '2-29', question: 'En el estudio de caracterización, las siglas GPC significan Generación ________ per cápita.', correct: ['per cápita', 'per capita'] },
+                { id: '2-30', question: 'Los residuos tóxicos, radiactivos y ________ no deben ingresar bajo ninguna circunstancia a la celda de un relleno convencional.', correct: ['explosivos', 'inflamables'] },
+                { id: '2-31', question: 'En el cálculo del volumen de recepción, la variable "a" minúscula corresponde al largo de base ________.', correct: ['mayor'] },
+                { id: '2-32', question: 'Asimismo, la variable "c" minúscula corresponde al ancho de base ________ de la trinchera.', correct: ['menor'] },
+                { id: '2-33', question: 'El cálculo de la generación diaria de residuos municipales incluye la recolección en domicilios, almacenamiento, instituciones y vías sujetas a ________.', correct: ['barrido'] },
+                { id: '2-34', question: 'Para obtener el volumen de los residuos (m³), se divide la generación anual (t/año) entre la ________ de compactación.', correct: ['densidad'] },
+                { id: '2-35', question: 'El volumen de material de ________ varía habitualmente entre el 20 % y el 25 % del volumen total de los residuos sólidos.', correct: ['cobertura'] },
+                { id: '2-36', question: 'En el Taller presentado al final de las diapositivas, se utiliza una tasa de ________ poblacional de 2.3 % anual.', correct: ['crecimiento'] },
+                { id: '2-37', question: 'El método ________ es el más usado ya que se adapta a terrenos con variaciones topográficas, uniendo trincheras y plataformas.', correct: ['combinado'] },
+                { id: '2-38', question: 'El estudio de mecánica de suelos es vital para comprobar la ________ del suelo y la estabilidad de los taludes de la celda.', correct: ['permeabilidad'] },
+                { id: '2-39', question: 'La suma del volumen de los residuos sólidos y el volumen de la tierra de cobertura nos da como resultado el volumen de la celda ________.', correct: ['diaria'] },
+                { id: '2-40', question: 'La operación en un relleno sanitario mecanizado es 100% ________ requiriendo tractores oruga de forma constante.', correct: ['mecanizada'] }
+            ]
+        },
+        3: {
+            multiple: [
+                { id: '3-1', question: '¿Cuál es la primera finalidad de la Gestión Integral de los Residuos Sólidos según el D.L. 1278?', options: ['A) La disposición final de los residuos.', 'B) La prevención o minimización de la generación de residuos sólidos en origen.', 'C) El transporte y barrido de calles.', 'D) La construcción de botaderos municipales.'], correct: 'B' },
+                { id: '3-2', question: '¿Qué norma legal aprueba la actual Ley de Gestión Integral de Residuos Sólidos en el Perú?', options: ['A) Ley Nº 27314', 'B) Decreto Supremo Nº 014-2017-MINAM', 'C) Decreto Legislativo Nº 1278', 'D) Resolución Ministerial Nº 1501'], correct: 'C' },
+                { id: '3-3', question: 'De acuerdo al Artículo 2 del D.L. 1278, la disposición final de los residuos sólidos constituye:', options: ['A) El principal método de valorización.', 'B) El primer paso del manejo de residuos.', 'C) La última alternativa de manejo.', 'D) Un proceso obsoleto y prohibido.'], correct: 'C' },
+                { id: '3-4', question: '¿Mediante qué dispositivo se aprobó el Reglamento del Decreto Legislativo N° 1278?', options: ['A) D.S. Nº 014-2017-MINAM', 'B) D.L. 1501', 'C) R.M. Nº 1278-2018', 'D) D.S. Nº 004-2016-MINAM'], correct: 'A' },
+                { id: '3-5', question: 'A nivel nacional, ¿a cuánto asciende la generación de residuos sólidos municipales por día, según los datos del MINAM mostrados?', options: ['A) 5.000 toneladas al día', 'B) 10.000 toneladas al día', 'C) 19.000 toneladas al día', 'D) 25.000 toneladas al día'], correct: 'C' },
+                { id: '3-6', question: 'Según las diapositivas, la generación diaria de residuos sólidos en el Perú equivale a llenar:', options: ['A) 1 estadio nacional', 'B) 3 estadios nacionales', 'C) 5 estadios nacionales', 'D) 10 estadios nacionales'], correct: 'B' },
+                { id: '3-7', question: '¿Qué institución elabora y administra el Inventario Nacional de Áreas Degradadas por Residuos Sólidos Municipales?', options: ['A) Ministerio de Salud (MINSA)', 'B) Ministerio del Ambiente (MINAM)', 'C) Organismo de Evaluación y Fiscalización Ambiental (OEFA)', 'D) Gobierno Regional'], correct: 'C' },
+                { id: '3-8', question: 'Según el reporte de OEFA del 2018, ¿cuántos botaderos (áreas degradadas) se han identificado a nivel nacional?', options: ['A) 548', 'B) 1,023', 'C) 1,585', 'D) 3,450'], correct: 'C' },
+                { id: '3-9', question: 'De las áreas degradadas identificadas, ¿cuántas han sido categorizadas como aptas para ser "reconvertidas" en infraestructura formal (rellenos sanitarios)?', options: ['A) 1,558', 'B) 149', 'C) 27', 'D) 54'], correct: 'C' },
+                { id: '3-10', question: '¿Qué se debe hacer con los 1,558 botaderos que han sido categorizados como áreas a ser "recuperadas"?', options: ['A) Clausurarlas e iniciar un proceso de recuperación de la zona.', 'B) Ampliarlas para convertirlas en rellenos de seguridad.', 'C) Vender los terrenos a empresas privadas de reciclaje.', 'D) Utilizarlas indefinidamente hasta agotar su capacidad.'], correct: 'A' },
+                { id: '3-11', question: '¿Qué significa la sigla PIFA en el contexto de las herramientas del OEFA?', options: ['A) Plan Integral de Fiscalización Ambiental', 'B) Portal Interactivo de Fiscalización Ambiental', 'C) Programa de Inversión y Formación Ambiental', 'D) Proyecto Integrado de Fuentes Ambientales'], correct: 'B' },
+                { id: '3-12', question: 'Según el gráfico del Inventario Nacional del OEFA, ¿qué departamento presenta la mayor cantidad de áreas degradadas (149 botaderos)?', options: ['A) Cajamarca', 'B) Áncash', 'C) Puno', 'D) Lima'], correct: 'B' },
+                { id: '3-13', question: '¿Cuál de los siguientes no es un impacto generado por los botaderos según el esquema presentado?', options: ['A) Contaminación de acuíferos por lixiviados.', 'B) Generación de biogás que causa efecto invernadero.', 'C) Reducción de la huella de carbono municipal.', 'D) Propagación de plagas y enfermedades.'], correct: 'C' },
+                { id: '3-14', question: 'En la composición típica de los residuos sólidos municipales, ¿qué porcentaje representan los residuos sólidos orgánicos?', options: ['A) 19%', 'B) 20%', 'C) 54%', 'D) 7%'], correct: 'C' },
+                { id: '3-15', question: '¿Qué porcentaje de los residuos sólidos municipales corresponde a "Residuos Inorgánicos Valorizables"?', options: ['A) 54%', 'B) 20%', 'C) 19%', 'D) 7%'], correct: 'B' },
+                { id: '3-16', question: '¿Qué porcentaje representan los residuos sólidos peligrosos en el flujo municipal?', options: ['A) 7%', 'B) 19%', 'C) 20%', 'D) 54%'], correct: 'A' },
+                { id: '3-17', question: '¿Cómo se denomina al proceso que permite transformar áreas donde se dispone basura de forma inadecuada en rellenos sanitarios formales?', options: ['A) Recuperación', 'B) Reconversión', 'C) Tratamiento térmico', 'D) Valorización material'], correct: 'B' },
+                { id: '3-18', question: 'En el ciclo del manejo de residuos sólidos presentado, ¿cuál es el proceso que sigue inmediatamente después de la "Segregación"?', options: ['A) Tratamiento', 'B) Disposición Final', 'C) Barrido y limpieza de espacios públicos', 'D) Transferencia'], correct: 'C' },
+                { id: '3-19', question: 'Los lugares donde se ha realizado acumulación de residuos sólidos sin consideraciones técnicas ni autorización son definidos legalmente como:', options: ['A) Rellenos sanitarios temporales.', 'B) Áreas degradadas por residuos sólidos.', 'C) Centros de acopio municipal.', 'D) Plantas de valorización inorgánica.'], correct: 'B' },
+                { id: '3-20', question: 'El botadero conocido como "El Milagro", referenciado en las diapositivas, se encuentra ubicado en la ciudad de:', options: ['A) Chimbote', 'B) Tacna', 'C) Trujillo', 'D) Lima'], correct: 'C' }
+            ],
+            fill: [
+                { id: '3-21', question: 'La gestión de los residuos sólidos en el país tiene como finalidad su manejo integral y ________.', correct: ['sostenible'] },
+                { id: '3-22', question: 'El Decreto Legislativo N° 1278 establece derechos, atribuciones y responsabilidades de la sociedad en su conjunto: ________.', correct: ['obligaciones'] },
+                { id: '3-23', question: 'Respecto de los residuos generados, la ley prefiere la recuperación y la ________ material y energética de los mismos.', correct: ['valorización', 'valorizacion'] },
+                { id: '3-24', question: 'Las áreas degradadas son lugares de acumulación permanente de residuos sin las consideraciones ________ establecidas.', correct: ['técnicas', 'tecnicas'] },
+                { id: '3-25', question: 'El Reglamento del D.L. 1278 fue promulgado mediante el Decreto Supremo N° ________ -MINAM.', correct: ['014-2017'] },
+                { id: '3-26', question: 'El Ministerio del Ambiente publicó Guías Técnicas para la formulación del Plan de ________ de áreas degradadas.', correct: ['recuperación', 'recuperacion'] },
+                { id: '3-27', question: 'Asimismo, existe una guía específica para el Programa de ________ y Manejo de áreas degradadas (cuando el botadero pasará a ser relleno).', correct: ['reconversión', 'reconversion'] },
+                { id: '3-28', question: 'Los botaderos informales generan problemas de salud pública atrayendo vectores y ________.', correct: ['plagas', 'enfermedades'] },
+                { id: '3-29', question: 'En los botaderos se produce un gas que contribuye al efecto invernadero: ________.', correct: ['biogás', 'biogas'] },
+                { id: '3-30', question: 'El líquido altamente contaminante que se filtra a través de la basura y llega a los acuíferos subterráneos se denomina ________.', correct: ['lixiviado', 'lixiviados'] },
+                { id: '3-31', question: 'El ________ es el organismo encargado de elaborar y administrar el Inventario Nacional de Áreas Degradadas.', correct: ['OEFA', 'UEFA'] },
+                { id: '3-32', question: 'Según el Inventario, el departamento de Cajamarca cuenta con ________ áreas degradadas identificadas (indicar el número).', correct: ['123'] },
+                { id: '3-33', question: 'El botadero "Alto Intiorko", mostrado a través de la plataforma PIFA, pertenece a la municipalidad provincial de ________.', correct: ['Tacna'] },
+                { id: '3-34', question: 'La composición de los residuos indica que el 19% corresponde a residuos sólidos valorizables ________.', correct: ['no'] },
+                { id: '3-35', question: 'El proceso de juntar residuos específicos en contenedores diferenciados en origen se denomina ________.', correct: ['segregación', 'segregacion'] },
+                { id: '3-36', question: 'Antes de llegar a la disposición final o al tratamiento, los residuos pueden pasar por una planta de ________ para optimizar su transporte.', correct: ['transferencia'] },
+                { id: '3-37', question: 'En total, se identificaron a nivel nacional ________ botaderos (indicar la cifra exacta según OEFA 2018).', correct: ['1585', '1,585'] },
+                { id: '3-38', question: 'De ellos, 1,558 botaderos tienen que iniciar un proceso de cierre y ________ debido a su impacto ambiental negativo.', correct: ['recuperación', 'recuperacion'] },
+                { id: '3-39', question: 'La ley busca maximizar la ________ en el uso de los materiales en todo el ciclo de vida del producto.', correct: ['eficiencia'] },
+                { id: '3-40', question: 'La Ley exige que el manejo de residuos se sujete a los principios de minimización, prevención de riesgos ambientales y protección a la ________ y bienestar de la persona.', correct: ['salud'] }
+            ]
+        },
+        4: {
+            multiple: [
+                { id: '4-1', question: '¿Cuál es el rango de densidad aproximada esperada para un relleno sanitario operado de forma manual (o a 6 t/día)?', options: ['A) 0.3 a 0.5 t/m3', 'B) 0.5 a 0.6 t/m3', 'C) 0.6 a 0.7 t/m3', 'D) 0.7 a 1.0 t/m3'], correct: 'B' },
+                { id: '4-2', question: 'Para calcular el Volumen del material de cobertura respecto al volumen de residuos sólidos, ¿qué rango porcentual se emplea?', options: ['A) Entre 10% y 15%', 'B) Entre 15% y 20%', 'C) Entre 20% y 25%', 'D) Entre 25% y 35%'], correct: 'C' },
+                { id: '4-3', question: 'En la fórmula del Área Total Requerida (AT = F × ARS), ¿qué porcentaje de área adicional (Factor F) se considera para vías, áreas de aislamiento e instalaciones?', options: ['A) Entre 5% y 10%', 'B) Entre 10% y 20%', 'C) Entre 20% y 40%', 'D) Entre 40% y 50%'], correct: 'C' },
+                { id: '4-4', question: '¿Cuál es la densidad de compactación típica lograda en un relleno semimecanizado (6 a 50 t/día)?', options: ['A) 0.4 - 0.5 t/m3', 'B) 0.5 - 0.6 t/m3', 'C) 0.6 - 0.7 t/m3', 'D) 0.7 - 1.0 t/m3'], correct: 'C' },
+                { id: '4-5', question: 'Según los periodos de vida útil, ¿cuánto tiempo como mínimo debe considerarse para la infraestructura de disposición final de residuos sólidos (Relleno Sanitario)?', options: ['A) No menor a 3 años', 'B) No menor a 5 años', 'C) No menor a 10 años', 'D) No menor a 15 años'], correct: 'C' },
+                { id: '4-6', question: '¿Cuál es la vida útil máxima recomendada para el funcionamiento de una "Celda transitoria"?', options: ['A) 2 años', 'B) 3 años', 'C) 5 años', 'D) 10 años'], correct: 'B' },
+                { id: '4-7', question: '¿Cuál es la vida útil recomendable para una nave de pretratamiento y relleno seco?', options: ['A) No menor a 5 años', 'B) Máximo 10 años', 'C) No menor a 15 años', 'D) Entre 3 y 5 años'], correct: 'C' },
+                { id: '4-8', question: 'En el esquema de impermeabilización de la base, ¿cuál es el espesor de la geomembrana HDPE indicada?', options: ['A) 0.5 mm', 'B) 1.0 mm', 'C) 1.5 mm', 'D) 2.0 mm'], correct: 'C' },
+                { id: '4-9', question: '¿Qué especificación técnica corresponde al geotextil no tejido utilizado en la base del relleno?', options: ['A) 100 gr/m2', 'B) 200 gr/m2', 'C) 300 gr/m2', 'D) 500 gr/m2'], correct: 'C' },
+                { id: '4-10', question: 'Según el esquema de corte, ¿cuál es el espesor de la "capa granulada de protección" que se coloca sobre los geosintéticos?', options: ['A) 0.10 m (10 cm)', 'B) 0.20 m (20 cm)', 'C) 0.30 m (30 cm)', 'D) 0.40 m (40 cm)'], correct: 'B' },
+                { id: '4-11', question: 'Para un relleno sanitario semimecanizado, ¿cuál es el espesor de la "base conformada (tierra seleccionada)" bajo la geomembrana?', options: ['A) 0.20 m', 'B) 0.40 m', 'C) 0.60 m', 'D) 0.80 m'], correct: 'B' },
+                { id: '4-12', question: 'Para calcular el volumen neto de residuos sólidos a disponer (m³/año), se debe dividir la generación anual en toneladas entre:', options: ['A) El factor de aumento F.', 'B) La densidad de los residuos sólidos compactados.', 'C) El volumen del material de cobertura.', 'D) La tasa de crecimiento poblacional.'], correct: 'B' },
+                { id: '4-13', question: 'En los parámetros para el cálculo del volumen de recepción en trinchera, la variable "a" (minúscula) representa:', options: ['A) El ancho de la base mayor.', 'B) El ancho de la base menor.', 'C) El largo de la base mayor.', 'D) La altura.'], correct: 'C' },
+                { id: '4-14', question: 'En el dimensionamiento de una trinchera, la letra "h" representa:', options: ['A) El largo de base mayor', 'B) El ancho de base menor', 'C) La humedad de los residuos', 'D) La altura o profundidad'], correct: 'D' },
+                { id: '4-15', question: 'Un relleno sanitario que recibe más de 50 t/día (> 50) y emplea compactación mecánica se clasifica como:', options: ['A) Relleno Manual', 'B) Relleno Semimecanizado', 'C) Relleno Mecanizado', 'D) Botadero Controlado'], correct: 'C' },
+                { id: '4-16', question: '¿Qué método geométrico es referido implícitamente en el cálculo de volumen de trincheras para integrar bases distintas con una altura?', options: ['A) Método de áreas promedio y altura.', 'B) Método del cilindro regular.', 'C) Método de polígonos de Thiessen.', 'D) Método de secciones rectangulares simples.'], correct: 'A' },
+                { id: '4-17', question: 'En la matriz de diseño, el Volumen de la Celda Diaria resulta de la suma aritmética de:', options: ['A) El volumen de lixiviados y el de biogás.', 'B) El volumen de los residuos más el volumen de material de cobertura.', 'C) La densidad per cápita y la altura de la celda.', 'D) El área a rellenar y el área total requerida.'], correct: 'B' },
+                { id: '4-18', question: 'En el cálculo de base para un relleno sanitario mecanizado, el espesor de la base conformada (tierra seleccionada) exigido es de:', options: ['A) 0.20 m', 'B) 0.40 m', 'C) 0.60 m', 'D) 0.80 m'], correct: 'D' },
+                { id: '4-19', question: 'Al proyectar la cantidad total de residuos municipales anuales (t/año), se suman los residuos domiciliarios, no domiciliarios, de almacenamiento y:', options: ['A) Escombros de construcción.', 'B) Residuos peligrosos hospitalarios.', 'C) Residuos de barrido.', 'D) Residuos radiactivos.'], correct: 'C' },
+                { id: '4-20', question: '¿Qué maquinaria/equipo caracteriza la compactación del relleno manual?', options: ['A) Tractores oruga.', 'B) Pisones manuales.', 'C) Rodillos pata de cabra.', 'D) Compactadoras hidráulicas estacionarias.'], correct: 'B' }
+            ],
+            fill: [
+                { id: '4-21', question: 'En las fórmulas de cálculo poblacional, la generación ________ de residuos sólidos (ej. 0.391 kg/hab) es clave para estimar los volúmenes futuros.', correct: ['per cápita', 'per capita'] },
+                { id: '4-22', question: 'Para calcular el Área Total (AT), se multiplica el factor "F" por el área a rellenar ________ de m2.', correct: ['sucesivamente'] },
+                { id: '4-23', question: 'El Área Total incluye áreas administrativas, patio de ________, vías e instalaciones.', correct: ['maniobras'] },
+                { id: '4-24', question: 'La vida útil mínima de un relleno sanitario debe ser no menor a ________ años.', correct: ['10', 'diez'] },
+                { id: '4-25', question: 'Por el contrario, una celda ________ está diseñada para tener una vida útil máxima de 3 años.', correct: ['transitoria'] },
+                { id: '4-26', question: 'La densidad de compactación esperada en un relleno mecanizado es del orden de ________ a 1.0 t/m3.', correct: ['0.7', '0.70'] },
+                { id: '4-27', question: 'Según el método volumétrico de trincheras, la variable "b" minúscula representa el ________ de la base mayor.', correct: ['ancho'] },
+                { id: '4-28', question: 'Así mismo, la variable "c" minúscula hace referencia al ancho de la base ________.', correct: ['menor'] },
+                { id: '4-29', question: 'En el sistema de impermeabilización, debajo de la capa granulada de protección (0.20m), se instala el ________ no tejido de 300 gr/m2.', correct: ['geotextil'] },
+                { id: '4-30', question: 'La barrera impermeable principal sobre la base de tierra seleccionada está compuesta por una ________ HDPE de 1.5mm.', correct: ['geomembrana'] },
+                { id: '4-31', question: 'En un relleno de tipo ________, el nivel de compactación y la cantidad diaria oscila típicamente entre 6 y 50 t/día.', correct: ['semimecanizado'] },
+                { id: '4-32', question: 'Para un relleno mecanizado, la tierra seleccionada que sirve como base conformada debe alcanzar un espesor de ________ m (80 cm).', correct: ['0.80', '0,80'] },
+                { id: '4-33', question: 'En la base de todas las capas de impermeabilización y conformación, se encuentra el suelo original ________.', correct: ['compactado'] },
+                { id: '4-34', question: 'El volumen de ________ de cobertura necesario se estima convencionalmente entre el 20% y el 25% del volumen de los residuos.', correct: ['material'] },
+                { id: '4-35', question: 'La vida útil recomendable para una nave de pretratamiento y relleno ________ no debe ser menor a 15 años.', correct: ['seco'] },
+                { id: '4-36', question: 'Para hallar el volumen anual de los residuos sólidos (m³/año), la fórmula indica que VRS = Generación municipal (t/año) / ________.', correct: ['densidad'] },
+                { id: '4-37', question: 'En la geometría de la celda diaria, el área horizontal por la que los camiones ingresan a dejar el material se denomina frente de ________.', correct: ['descarga'] },
+                { id: '4-38', question: 'La altura promedio (h) multiplicada por el Área a rellenar sucesivamente (ARS) debe darnos como resultado el ________ del relleno sanitario (VRS).', correct: ['volumen'] },
+                { id: '4-39', question: 'Las siglas HDPE correspondientes al material de impermeabilización significan Polietileno de densidad ________ (en su traducción del inglés High Density Polyethylene).', correct: ['alta'] },
+                { id: '4-40', question: 'Una localidad que genera menos de 6 t/día requiere implementar un relleno sanitario de tipo ________.', correct: ['manual'] }
+            ]
+        },
+        5: {
+            multiple: [
+                { id: '5-1', question: 'Según la normativa peruana, ¿cuál es el principal objetivo de un Estudio de Selección de Área en este contexto?', options: ['A) Determinar la viabilidad económica de las empresas de reciclaje.', 'B) Identificar áreas potenciales en donde ubicar un relleno sanitario.', 'C) Clausurar botaderos informales en áreas protegidas.', 'D) Diseñar la infraestructura civil de la celda transitoria.'], correct: 'B' },
+                { id: '5-2', question: '¿Qué Decreto Supremo aprueba el Reglamento de la Ley de Gestión Integral de Residuos Sólidos?', options: ['A) D.S Nº 014-2017-MINAM', 'B) D.S Nº 012-2015-MINAM', 'C) D.S Nº 1278-2017-PCM', 'D) D.S Nº 004-2018-MINAM'], correct: 'A' },
+                { id: '5-3', question: 'De acuerdo al "Paso 1", ¿qué tipo de áreas se deben priorizar para la selección de sitio?', options: ['A) Únicamente áreas privadas sin uso agrícola.', 'B) Áreas públicas disponibles con las que cuente la municipalidad.', 'C) Áreas naturales protegidas por su lejanía.', 'D) Zonas de expansión urbana recientes.'], correct: 'B' },
+                { id: '5-4', question: '¿Se pueden considerar áreas privadas para ubicar la infraestructura?', options: ['A) No, está estrictamente prohibido.', 'B) Sí, pero solo mediante expropiación forzosa del Estado.', 'C) Sí, si existe consentimiento previo del propietario.', 'D) Solo si la municipalidad no tiene ningún terreno público.'], correct: 'C' },
+                { id: '5-5', question: 'En caso de existir discrepancia entre dos o más Municipalidades Provinciales respecto a la ubicación, ¿quién define la selección de áreas?', options: ['A) El Ministerio del Ambiente (MINAM).', 'B) El Gobierno Regional.', 'C) La Municipalidad Distrital afectada.', 'D) El Congreso de la República.'], correct: 'B' },
+                { id: '5-6', question: 'Según el Artículo 110, ¿cuál es la distancia mínima general a poblaciones y granjas avícolas/porcinas?', options: ['A) No menor a 100 metros.', 'B) No menor a 300 metros.', 'C) No menor a 500 metros.', 'D) No menor a 1000 metros.'], correct: 'C' },
+                { id: '5-7', question: 'El Artículo 110 establece que las infraestructuras de disposición final NO deben estar ubicadas en:', options: ['A) Zonas áridas y desérticas.', 'B) Zonas de pantanos, humedales o recarga de acuíferos.', 'C) Terrenos con pendientes menores al 2%.', 'D) Zonas cercanas a vías de acceso principales.'], correct: 'B' },
+                { id: '5-8', question: 'Para ubicar una infraestructura cerca de aeródromos, se requiere opinión favorable de la DGAC si está dentro de un radio de:', options: ['A) 5.0 km del Punto de Referencia.', 'B) 10.0 km del Punto de Referencia.', 'C) 13.0 km del Punto de Referencia.', 'D) 20.0 km del Punto de Referencia.'], correct: 'C' },
+                { id: '5-9', question: 'Una vez finalizado el Informe de Selección (Paso 5), ¿qué certificado se debe solicitar a la municipalidad provincial?', options: ['A) Certificado de Saneamiento Físico Legal.', 'B) Certificado de Compatibilidad de uso del terreno.', 'C) Certificado de Defensa Civil.', 'D) Certificado Ambiental.'], correct: 'B' },
+                { id: '5-10', question: '¿Cuál es el peso ponderado del criterio "Distancia a la Población más cercana" en la matriz de calificación?', options: ['A) 3', 'B) 4', 'C) 5', 'D) 6'], correct: 'D' },
+                { id: '5-11', question: 'En la matriz de calificación, ¿qué criterio tiene asignado un peso ponderado de 3 (el más bajo)?', options: ['A) Geología del suelo (permeabilidad).', 'B) Opinión Pública.', 'C) Posibilidad del material de cobertura.', 'D) Accesibilidad al área.'], correct: 'C' },
+                { id: '5-12', question: '¿Qué puntaje base se le asigna a un criterio evaluado con un grado "Bueno"?', options: ['A) 1', 'B) 3', 'C) 5', 'D) 10'], correct: 'C' },
+                { id: '5-13', question: 'Según la tabla de calificación, para que un terreno sea calificado como "Aceptable - Bueno", su puntaje ponderado total debe estar en el rango de:', options: ['A) 0 a 195', 'B) 195 a 355', 'C) 355 a 450', 'D) 450 a 600'], correct: 'B' },
+                { id: '5-14', question: 'Un terreno con un puntaje ponderado total menor a 195 se clasifica como:', options: ['A) Aceptable - Bueno', 'B) Aceptable de Primera Opción - Muy Bueno', 'C) Terreno No Aceptable - Malo', 'D) Terreno Regular'], correct: 'C' },
+                { id: '5-15', question: 'Según el contenido mínimo, el "Saneamiento físico legal del terreno" forma parte del:', options: ['A) Capítulo I', 'B) Capítulo II', 'C) Capítulo III', 'D) Anexo técnico'], correct: 'A' },
+                { id: '5-16', question: 'En los criterios de selección (Artículo 109), se debe velar por la preservación de áreas naturales protegidas por:', options: ['A) Los municipios locales.', 'B) Las empresas privadas.', 'C) El Estado.', 'D) Las comunidades nativas.'], correct: 'C' },
+                { id: '5-17', question: 'Según la Matriz de Calificación, ¿cuál de los siguientes criterios tiene un ponderado de 5?', options: ['A) Distancia a fallas geológicas.', 'B) Vulnerabilidad a desastres naturales.', 'C) Propiedad del terreno.', 'D) Área arqueológica.'], correct: 'D' },
+                { id: '5-18', question: 'De acuerdo al inciso "a" del Art. 109, el área seleccionada debe ser compatible con:', options: ['A) Los planes de expansión urbana y uso de suelo.', 'B) La infraestructura vial nacional.', 'C) El desarrollo turístico regional.', 'D) Los corredores biológicos internacionales.'], correct: 'A' },
+                { id: '5-19', question: '¿Qué instrumento de gestión ambiental se exige para la selección del sitio?', options: ['A) El Instrumento de Gestión Ambiental (IGA).', 'B) El Estudio de Impacto Ambiental detallado.', 'C) El Programa de Adecuación y Manejo Ambiental.', 'D) La Declaración de Impacto Ambiental.'], correct: 'A' },
+                { id: '5-20', question: 'La Dirección predominante del viento debe ser idealmente ________ a la población más cercana.', options: ['A) perpendicular', 'B) paralela', 'C) contraria', 'D) indiferente'], correct: 'C' }
+            ],
+            fill: [
+                { id: '5-21', question: 'El objetivo del estudio es identificar en el ámbito de estudio áreas potenciales en donde ubicar el ________.', correct: ['relleno sanitario'] },
+                { id: '5-22', question: 'El Reglamento de la Ley de Gestión Integral de Residuos Sólidos fue aprobado mediante el Decreto Supremo Nº ________ -MINAM.', correct: ['014-2017'] },
+                { id: '5-23', question: 'La municipalidad ________, en coordinación con la distrital, identifica los espacios geográficos en su jurisdicción.', correct: ['provincial'] },
+                { id: '5-24', question: 'Según el Art. 109, la selección busca la minimización y prevención de los impactos sociales, sanitarios y ________ negativos.', correct: ['ambientales'] },
+                { id: '5-25', question: 'Entre los factores que el Art. 109 manda evaluar están los climáticos, topográficos, geológicos, geomorfológicos e ________.', correct: ['hidrogeológicos', 'hidrogeologicos'] },
+                { id: '5-26', question: 'Las infraestructuras no deben estar ubicadas a distancias menores de 500 metros de fuentes de aguas ________.', correct: ['superficiales'] },
+                { id: '5-27', question: 'Las infraestructuras no deben ubicarse en zonas con presencia de ________ geológicas.', correct: ['fallas'] },
+                { id: '5-28', question: 'Se debe evitar zonas donde se puedan generar asentamientos o ________ que desestabilicen la integridad de la infraestructura.', correct: ['deslizamientos'] },
+                { id: '5-29', question: 'Entre los factores a evaluar también se consideran las ________.', correct: ['comunicaciones'] },
+                { id: '5-30', question: 'En la sistematización de la información, se debe elaborar el ________ del Estudio de Selección de Área.', correct: ['informe'] },
+                { id: '5-31', question: 'El Capítulo II de los contenidos mínimos exige la elaboración de una Matriz de ________ para la selección de sitio.', correct: ['calificación', 'calificacion'] },
+                { id: '5-32', question: 'En la matriz de calificación, los criterios de distancia a poblaciones, fuentes de agua, granjas y fallas geológicas tienen un peso ponderado de ________.', correct: ['6'] },
+                { id: '5-33', question: 'El criterio de "Vida útil" en la matriz recibe evaluación considerando si el terreno permite una vida útil menor o igual a ________ años.', correct: ['3', 'tres'] },
+                { id: '5-34', question: 'Para evaluar un terreno, el grado calificado como "Malo" aporta ________ punto(s) antes de ser multiplicado por el ponderado.', correct: ['1', 'uno'] },
+                { id: '5-35', question: 'El grado calificado como "Regular" aporta ________ punto(s) para la calificación del criterio.', correct: ['3', 'tres'] },
+                { id: '5-36', question: 'Para calcular la Calificación final de cada criterio en la matriz, se multiplica el puntaje asignado por el ________ (AxB).', correct: ['ponderado'] },
+                { id: '5-37', question: 'La alternativa seleccionada como ganadora será siempre aquella que obtenga el puntaje total ________.', correct: ['mayor'] },
+                { id: '5-38', question: 'Una alternativa para ser considerada válida o ganadora debe superar obligatoriamente los ________ puntos.', correct: ['195'] },
+                { id: '5-39', question: 'Un terreno calificado como "Aceptable de Primera Opción - Muy Bueno" debe alcanzar de ________ puntos a más.', correct: ['355'] },
+                { id: '5-40', question: 'La Dirección predominante del viento debe ser idealmente ________ a la población más cercana.', correct: ['contraria'] }
+            ]
+        }
+    };
+
+    // ======================== FUNCIONES DE RENDERIZADO ========================
+    function renderExam(examId) {
+        const data = examsData[examId];
+        if (!data) return;
+        const multipleContainer = document.getElementById(`exam${examId}-multiple`);
+        const fillContainer = document.getElementById(`exam${examId}-fill`);
+        if (!multipleContainer || !fillContainer) return;
+
+        // Render multiple
+        multipleContainer.innerHTML = '';
+        data.multiple.forEach(q => {
+            const div = document.createElement('div');
+            div.className = 'question-item';
+            div.id = `q-${q.id}`;
+            let optionsHtml = '';
+            q.options.forEach((opt, idx) => {
+                const letter = String.fromCharCode(65 + idx);
+                optionsHtml += `
+                    <label class="option">
+                        <input type="radio" name="q${q.id}" value="${letter}">
+                        ${opt}
+                    </label>
+                `;
+            });
+            div.innerHTML = `
+                <div class="question-text">${q.id.split('-')[1]}. ${q.question}</div>
+                <div class="options">${optionsHtml}</div>
+                <div class="fill-row">
+                    <button class="btn-verify small" data-exam="${examId}" data-qid="${q.id}" data-type="multiple">Verificar</button>
+                    <span class="feedback" id="fb-${q.id}"></span>
+                </div>
+                <div class="correct-answer-msg hidden" id="ans-${q.id}"></div>
+            `;
+            multipleContainer.appendChild(div);
+        });
+
+        // Render fill
+        fillContainer.innerHTML = '';
+        data.fill.forEach(q => {
+            const div = document.createElement('div');
+            div.className = 'question-item';
+            div.id = `q-${q.id}`;
+            div.innerHTML = `
+                <div class="question-text">${q.id.split('-')[1]}. ${q.question}</div>
+                <div class="fill-row">
+                    <input type="text" class="fill-input" id="input-${q.id}" placeholder="Escribe tu respuesta...">
+                    <button class="btn-verify small" data-exam="${examId}" data-qid="${q.id}" data-type="fill">Verificar</button>
+                    <span class="feedback" id="fb-${q.id}"></span>
+                </div>
+                <div class="correct-answer-msg hidden" id="ans-${q.id}"></div>
+            `;
+            fillContainer.appendChild(div);
+        });
+    }
+
+    // ======================== VERIFICACIÓN ========================
+    function verificarMultiple(examId, qId) {
+        const data = examsData[examId];
+        const q = data.multiple.find(item => item.id === qId);
+        if (!q) return;
+        const selected = document.querySelector(`input[name="q${qId}"]:checked`);
+        const feedback = document.getElementById(`fb-${qId}`);
+        const ansDiv = document.getElementById(`ans-${qId}`);
+        const container = document.getElementById(`q-${qId}`);
+        if (!selected) {
+            feedback.innerHTML = '<span class="cross">❌</span> Selecciona una opción';
+            container.classList.remove('correct', 'incorrect');
+            container.classList.add('incorrect');
+            ansDiv.classList.add('hidden');
+            return;
+        }
+        const isCorrect = selected.value === q.correct;
+        if (isCorrect) {
+            feedback.innerHTML = '<span class="check">✔️</span> ¡Correcto!';
+            container.classList.remove('incorrect');
+            container.classList.add('correct');
+            ansDiv.classList.add('hidden');
+        } else {
+            feedback.innerHTML = '<span class="cross">❌</span> Incorrecto';
+            container.classList.remove('correct');
+            container.classList.add('incorrect');
+            const correctOption = q.options.find(opt => opt.startsWith(q.correct + ')'));
+            ansDiv.innerHTML = `💡 Respuesta correcta: <strong>${correctOption || q.correct}</strong>`;
+            ansDiv.classList.remove('hidden');
+        }
+    }
+
+    function verificarFill(examId, qId) {
+        const data = examsData[examId];
+        const q = data.fill.find(item => item.id === qId);
+        if (!q) return;
+        const input = document.getElementById(`input-${qId}`);
+        const feedback = document.getElementById(`fb-${qId}`);
+        const ansDiv = document.getElementById(`ans-${qId}`);
+        const container = document.getElementById(`q-${qId}`);
+        const userValue = input.value.trim().toLowerCase();
+        if (!userValue) {
+            feedback.innerHTML = '<span class="cross">❌</span> Escribe una respuesta';
+            container.classList.remove('correct', 'incorrect');
+            container.classList.add('incorrect');
+            ansDiv.classList.add('hidden');
+            return;
+        }
+        const normalizedUser = userValue.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, '');
+        const isCorrect = q.correct.some(correct => {
+            const normalizedCorrect = correct.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, '');
+            return normalizedUser === normalizedCorrect;
+        });
+        if (isCorrect) {
+            feedback.innerHTML = '<span class="check">✔️</span> ¡Correcto!';
+            container.classList.remove('incorrect');
+            container.classList.add('correct');
+            ansDiv.classList.add('hidden');
+        } else {
+            feedback.innerHTML = '<span class="cross">❌</span> Incorrecto';
+            container.classList.remove('correct');
+            container.classList.add('incorrect');
+            ansDiv.innerHTML = `💡 Respuesta correcta: <strong>${q.correct[0]}</strong>`;
+            ansDiv.classList.remove('hidden');
+        }
+    }
+
+    // ======================== RESET ========================
+    function resetExam(examId) {
+        document.querySelectorAll(`#exam${examId} input[type="radio"]`).forEach(radio => {
+            radio.checked = false;
+        });
+        document.querySelectorAll(`#exam${examId} .fill-input`).forEach(input => {
+            input.value = '';
+        });
+        document.querySelectorAll(`#exam${examId} .feedback`).forEach(el => el.innerHTML = '');
+        document.querySelectorAll(`#exam${examId} .correct-answer-msg`).forEach(el => {
+            el.classList.add('hidden');
+            el.innerHTML = '';
+        });
+        document.querySelectorAll(`#exam${examId} .question-item`).forEach(el => {
+            el.classList.remove('correct', 'incorrect');
+        });
+    }
+
+    // ======================== CAMBIO DE EXAMEN ========================
+    function switchExam(examId) {
+        // Ocultar todos los exámenes
+        for (let i = 1; i <= 5; i++) {
+            const card = document.getElementById(`exam${i}`);
+            if (card) card.classList.add('hidden');
+        }
+        // Mostrar el seleccionado
+        const selected = document.getElementById(`exam${examId}`);
+        if (selected) selected.classList.remove('hidden');
+
+        // Actualizar pestañas
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.exam) === examId);
+        });
+
+        // Scroll suave al inicio del examen
+        selected.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ======================== EVENTOS ========================
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-verify');
+        if (!btn) return;
+        const examId = parseInt(btn.dataset.exam);
+        const qId = btn.dataset.qid;
+        const type = btn.dataset.type;
+        if (type === 'multiple') {
+            verificarMultiple(examId, qId);
+        } else if (type === 'fill') {
+            verificarFill(examId, qId);
+        }
+    });
+
+    // Evento de pestañas
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const examId = parseInt(this.dataset.exam);
+            switchExam(examId);
+        });
+    });
+
+    // ======================== INICIALIZAR ========================
+    window.addEventListener('DOMContentLoaded', () => {
+        for (let i = 1; i <= 5; i++) {
+            renderExam(i);
+        }
+        // Mostrar el examen 1 por defecto
+        switchExam(1);
+    });
+</script>
+</body>
+</html>
